@@ -32,6 +32,9 @@ it('omits development artifacts while preserving executable modules, assets and 
     '@deepseek-ai/libreoffice-kit-wasm/assets/soffice.data',
     '@deepseek-ai/libreoffice-kit-darwin-arm64/bin/dsoffice',
     '.modules.yaml', '.pnpm-workspace-state-v1.json', '.bin/tool', '.pnpm/cache',
+    // Dot entries the ASAR builder's glob omits; the sealed inventory must match.
+    'example/.yarn/runtime.cjs', '@mixmark-io/domino/.yarn-data.json',
+    'dshmarket/node_modules/undici/lib/llhttp/.gitkeep',
   ]
   const retained = [
     'example/index.js', 'example/index.cjs', 'example/index.mjs', 'example/worker.js',
@@ -48,7 +51,6 @@ it('omits development artifacts while preserving executable modules, assets and 
     '@koromix/koffi-win32-x64/win32_x64/koffi.node',
     '@mixmark-io/domino/lib/HTMLParser.js', '@mixmark-io/domino/lib/EntityParser.js',
     '@mixmark-io/domino/LICENSE', '@mixmark-io/domino/package.json',
-    'example/.yarn/runtime.cjs', '@mixmark-io/domino/.yarn-data.json',
     '@img/sharp-win32-x64/lib/libvips-42.dll',
     '@deepseek-ai/libreoffice-kit-win32-x64/bin/dsoffice.exe',
     '@deepseek-ai/libreoffice-kit-win32-x64/sources/core-source.json',

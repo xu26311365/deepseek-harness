@@ -13,9 +13,10 @@ export function desktopRuntimeFileExclusion(
   path: string, target: { platform: NodeJS.Platform; arch: string }, officeEngine: string,
 ): string | undefined {
   const parts = path.split(/[\\/]/u)
-  if (parts.some(part => ['.bin', '.pnpm', '.modules.yaml', '.pnpm-workspace-state-v1.json'].includes(part))) {
-    return 'package-manager metadata'
-  }
+  // The ASAR builder's glob omits dot-named entries, so the sealed inventory must
+  // match: exclude every dot-named file or directory at any depth (package-manager
+  // metadata, VCS placeholders such as .gitkeep, tooling trees such as .yarn).
+  if (parts.some(part => part.startsWith('.'))) return 'dot entry omitted by the ASAR builder'
   const file = parts.at(-1)!
   if (/\.(?:[cm]?[jt]s|css)\.map$/u.test(file)) return 'source map'
   if (/\.d\.[cm]?ts$/u.test(file)) return 'TypeScript declaration'

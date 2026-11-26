@@ -23,9 +23,10 @@ overrides:
   'undici@^8': '8.12.4'
   '@deepseek-ai/cosmokit': 'link:vendor/cosmokit'
   '@deepseek-ai/schemastery': 'link:vendor/schemastery'
-  # The @vibeinging desktop plugins are unpublished (registry 404); resolve the exact
-  # shipped versions from the local tarballs so desktop packaging can materialize them.
-  '@vibeinging/dsh-desktop-shell': 'file:apps/desktop/vendor-plugins/vibeinging-dsh-desktop-shell-0.1.4.tgz'
+  # The local market panel bundle (forked from the unpublished
+  # @vibeinging/dsh-desktop-shell; registry 404) resolves from the staged tarball so
+  # desktop packaging can materialize it.
+  'dsh-market-panel': 'file:apps/desktop/vendor-plugins/dsh-market-panel-0.2.0.tgz'
 
 peerDependencyRules:
   allowedVersions:

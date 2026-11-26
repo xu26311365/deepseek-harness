@@ -102,10 +102,15 @@ jobs:
           $exe = Get-ChildItem 'apps\desktop\.desktop-build\targets\win-x64\unsigned-artifacts\dsh-desktop-*.exe' | Select-Object -First 1
           if ($exe -eq $null) { throw 'no unsigned NSIS installer found in the expected directory' }
           $tag = 'dsh-win-x64-' + [datetime]::UtcNow.ToString('yyyyMMdd')
-          $bodyText = "DSH Desktop · Windows x64 (unsigned build 0.2.3-alpha.2, commit $env:GITHUB_SHA)`n`n"
-          $bodyText += "- Installer: $($exe.Name) ($([math]::Round($exe.Length / 1MB, 1)) MB)`n"
-          $bodyText += "- Build log: https://github.com/$env:GH_REPO/actions/runs/$env:GITHUB_RUN_ID`n"
-          $bodyText += "- Unsigned community build; run SmartScreen/antivirus as usual."
+          # The release body is the checked-in RELEASE_NOTES.md template (upstream base,
+          # change list, plugin inventory), with the dynamic build lines injected on top.
+          $notes = Get-Content -LiteralPath 'RELEASE_NOTES.md' -Raw
+          $dynamic = "## Build`n"
+          $dynamic += "- Commit: $env:GITHUB_SHA`n"
+          $dynamic += "- Installer: $($exe.Name) ($([math]::Round($exe.Length / 1MB, 1)) MB)`n"
+          $dynamic += "- Build log: https://github.com/$env:GH_REPO/actions/runs/$env:GITHUB_RUN_ID`n"
+          $dynamic += "- Unsigned community build; run SmartScreen/antivirus as usual."
+          $bodyText = $dynamic + "`n`n" + $notes
           # Recreate the day's release if an earlier build already published it, so the asset
           # always reflects the newest installer of the day (a missing tag just no-ops).
           gh release delete $tag --yes 2>$null

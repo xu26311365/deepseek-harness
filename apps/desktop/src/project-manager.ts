@@ -30,10 +30,11 @@ const DSH_PACKAGE = '@deepseek-ai/dsh'
 const CORE_BUILD_PACKAGE = '@deepseek-ai/dsh-subprocess-local'
 const WEB_PROFILE = PROFILE_TEMPLATES.web as ProfileTemplate
 const WORKSPACE_SETTINGS = 'nodeLinker: hoisted\nautoInstallPeers: false\n'
-// Unpublished @vibeinging desktop plugins: the BUILD_ROOT install resolves their exact
-// shipped versions from the tarballs staged beside the runtime project (file: overrides).
+// Local market panel bundle (forked from the unpublished @vibeinging/dsh-desktop-shell,
+// share/star footer removed): the BUILD_ROOT install resolves it from the tarball staged
+// beside the runtime project (file: override).
 const VENDOR_PLUGIN_OVERRIDES: Readonly<Record<string, string>> = {
-  '@vibeinging/dsh-desktop-shell': 'file:./vendor-plugins/vibeinging-dsh-desktop-shell-0.1.4.tgz',
+  'dsh-market-panel': 'file:./vendor-plugins/dsh-market-panel-0.2.0.tgz',
 }
 function writeJson(path: string, value: unknown): void {
   writeFileSync(path, `${JSON.stringify(value, undefined, 2)}\n`, { mode: 0o600 })

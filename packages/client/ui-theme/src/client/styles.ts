@@ -8,6 +8,10 @@ import '../styles/onboarding.css'
 import '../styles/scrollbar.css'
 import '../styles/gradient-shadow-text.css'
 import '../styles/shiki.css'
+// Default palette override: baked from the dsh-cool-theme "cobalt2" preset so the
+// app ships looking like Cobalt2 without the plugin. Imported last so its token
+// values win the same-selector cascade over design-platform/shiki above.
+import '../styles/cobalt2.css'
 
 const HAIRLINE_WIDTH = '--dsh-hairline-width'
 

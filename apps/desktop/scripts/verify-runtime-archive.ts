@@ -49,5 +49,23 @@ export async function verifyRuntimeArchive(archivePath: string, expected: Deskto
     if (!entry.isFile() || !unpacked.has(path)) throw new Error(`desktop runtime: unexpected unpacked entry ${path}`)
   }
   files.sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0)
-  if (JSON.stringify(files) !== JSON.stringify(expected.files)) throw new Error('desktop runtime: ASAR integrity verification failed')
+  if (JSON.stringify(files) !== JSON.stringify(expected.files)) {
+    const expectedByPath = new Map(expected.files.map(file => [file.path, file]))
+    const actualByPath = new Map(files.map(file => [file.path, file]))
+    const missing = expected.files.filter(file => !actualByPath.has(file.path))
+    const extra = files.filter(file => !expectedByPath.has(file.path))
+    const changed = files.filter(file => {
+      const sealed = expectedByPath.get(file.path)
+      return sealed !== undefined && (sealed.sha256 !== file.sha256 || sealed.bytes !== file.bytes)
+    })
+    console.error(`desktop runtime: ASAR inventory diff sealed=${expected.files.length} archived=${files.length}`
+      + ` missing=${missing.length} extra=${extra.length} changed=${changed.length}`)
+    for (const file of missing.slice(0, 80)) console.error(`  missing: ${file.path} bytes=${file.bytes} sha=${file.sha256}`)
+    for (const file of extra.slice(0, 80)) console.error(`  extra: ${file.path} bytes=${file.bytes} sha=${file.sha256}`)
+    for (const file of changed.slice(0, 80)) {
+      const sealed = expectedByPath.get(file.path)!
+      console.error(`  changed: ${file.path} sealed=${sealed.bytes}/${sealed.sha256} archived=${file.bytes}/${file.sha256}`)
+    }
+    throw new Error('desktop runtime: ASAR integrity verification failed')
+  }
 }

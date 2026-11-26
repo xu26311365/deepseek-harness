@@ -109,9 +109,17 @@ jobs:
             -Headers @{ Authorization = "token $env:GH_TOKEN"; Accept = 'application/vnd.github+json' } `
             -Body (@{ tag_name = $tag; name = "DSH Desktop win-x64 · round $runNumber"; prerelease = $true; target_commitish = $env:GITHUB_SHA; body = $bodyText } | ConvertTo-Json) `
             -ContentType 'application/json' -UseBasicParsing
-          $uploadUrl = ($release.Content | ConvertFrom-Json).upload_url
-          if ([string]$uploadUrl -eq '' -or $uploadUrl.Contains('{')) { throw "release creation did not return a usable upload_url: $uploadUrl" }
+          # GitHub returns a templated upload_url: either '.../assets{?name,label}'
+          # (strip the brace template) or '.../assets?name={name}&label={label}'
+          # (strip the whole query). Then pass the asset name explicitly.
+          $rawUploadUrl = [string]((($release.Content | ConvertFrom-Json).upload_url))
+          if ($rawUploadUrl -match '\{') {
+            $uploadUrl = $rawUploadUrl -replace '\{.*$', ''
+          } else {
+            $uploadUrl = $rawUploadUrl -replace '\?.*$', ''
+          }
+          if ($uploadUrl -eq '') { throw "release creation did not return a usable upload_url: $rawUploadUrl" }
           curl.exe -sSL -f -X POST -H "Authorization: token $env:GH_TOKEN" -H 'Content-Type: application/octet-stream' `
-            --data-binary "@$($exe.FullName)" $uploadUrl
+            "--data-binary @$($exe.FullName)" "$($uploadUrl)?name=$([uri]::EscapeDataString($exe.Name))"
           if ($LASTEXITCODE -ne 0) { throw "release asset upload failed (exit $LASTEXITCODE)" }
           Write-Host "published release $tag with $($exe.Name)"

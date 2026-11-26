@@ -52,6 +52,24 @@ jobs:
         env:
           PNPM_CONFIG_STORE_DIR: D:\dsh-public-cache\.pnpm-store
 
+      - name: Write machine-local .env.windows (unsigned test-deployment preset)
+        # The official self-hosted runner carries a hand-filled .env.windows (git ignored).
+        # Public runners have no such file: generate the minimum unsigned test preset from
+        # .env.windows.example. Policy validation still runs for win32 even when unsigned,
+        # so the test-deployment origin + nonempty allowedAuthOrigins are required.
+        run: |
+          $envWin = Join-Path (Get-Location) 'apps\desktop\.env.windows'
+          $content = @'
+            DSH_DESKTOP_APP_ID=com.deepseek.dsh
+            DSH_DESKTOP_AUTO_UPDATE_ENV=test
+            DOWNLOAD_TEST_ORIGIN=https://download.example.com
+            DSH_DESKTOP_MANDATORY_UPDATE_TEST_ORIGIN=https://download.example.com
+            DSH_DESKTOP_MANDATORY_UPDATE_CONFIG='{"allowedAuthOrigins":["https://login.example.com"]}'
+            DSH_DESKTOP_WINDOWS_COMPRESSION_LEVEL=3
+          '@
+          Set-Content -LiteralPath $envWin -Value $content -Encoding utf8
+          Write-Host "wrote $envWin"
+
       - name: Build unsigned Windows x64 installer
         run: pnpm run package:desktop:win:x64:unsigned --build-version 0.2.3-alpha.2
         env:

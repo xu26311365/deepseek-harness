@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: windows-desktop-package-public
@@ -88,3 +88,30 @@ jobs:
           name: dsh-desktop-win-x64-unsigned-public
           path: apps/desktop/.desktop-build/targets/win-x64/unsigned-artifacts/dsh-desktop-*.exe
           retention-days: 14
+
+      - name: Publish GitHub Release
+        # Create one GitHub Release per round (tag dsh-win-x64-<run number>) with the NSIS
+        # installer as its asset, so the binary survives beyond the 14-day artifact retention.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $exe = Get-ChildItem 'apps\desktop\.desktop-build\targets\win-x64\unsigned-artifacts\dsh-desktop-*.exe' | Select-Object -First 1
+          if ($exe -eq $null) { throw 'no unsigned NSIS installer found in the expected directory' }
+          $runNumber = $env:GITHUB_RUN_NUMBER
+          $tag = "dsh-win-x64-$runNumber"
+          $api = 'https://api.github.com/repos/' + $env:GITHUB_REPOSITORY + '/releases'
+          $bodyText = "DSH Desktop · Windows x64 (round $runNumber, unsigned build 0.2.3-alpha.2)
+
+- Installer: $($exe.Name) ($([math]::Round($exe.Length / 1MB, 1)) MB)
+- Build log: https://github.com/$($env:GITHUB_REPOSITORY)/actions/runs/$($env:GITHUB_RUN_ID)
+- Unsigned community build; run SmartScreen/antivirus as usual."
+          $release = Invoke-WebRequest -Method Post -Uri $api `
+            -Headers @{ Authorization = "token $env:GH_TOKEN"; Accept = 'application/vnd.github+json' } `
+            -Body (@{ tag_name = $tag; name = "DSH Desktop win-x64 · round $runNumber"; prerelease = $true; target_commitish = $env:GITHUB_SHA; body = $bodyText } | ConvertTo-Json) `
+            -ContentType 'application/json' -UseBasicParsing
+          $uploadUrl = ($release.Content | ConvertFrom-Json).upload_url
+          if ([string]$uploadUrl -eq '' -or $uploadUrl.Contains('{')) { throw "release creation did not return a usable upload_url: $uploadUrl" }
+          curl.exe -sSL -f -X POST -H "Authorization: token $env:GH_TOKEN" -H 'Content-Type: application/octet-stream' `
+            --data-binary "@$($exe.FullName)" $uploadUrl
+          if ($LASTEXITCODE -ne 0) { throw "release asset upload failed (exit $LASTEXITCODE)" }
+          Write-Host "published release $tag with $($exe.Name)"

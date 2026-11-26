@@ -126,6 +126,12 @@ async function main(): Promise<void> {
     const patches = await packagingStep(process.env.DSH_DESKTOP_PACKAGING_RUN_DIR, 'runtime:stage-packages', async () => {
       copyFileSync(join(PACKAGE_SET_ROOT, DESKTOP_PACKAGE_SET_FILE), join(BUILD_ROOT, DESKTOP_PACKAGE_SET_FILE))
       cpSync(join(PACKAGE_SET_ROOT, DESKTOP_PACKAGES_DIR), join(BUILD_ROOT, DESKTOP_PACKAGES_DIR), { recursive: true })
+      // Stage the local @vibeinging plugin tarballs (unpublished, registry 404) so the
+      // BUILD_ROOT pnpm-workspace.yaml can resolve them via file: overrides.
+      const vendorPluginsDir = join(APP_ROOT, 'vendor-plugins')
+      if (existsSync(vendorPluginsDir)) {
+        cpSync(vendorPluginsDir, join(BUILD_ROOT, 'vendor-plugins'), { recursive: true })
+      }
       createRuntimeProjectMetadata(BUILD_ROOT, release)
       return prepareRuntimePatches(BUILD_ROOT, resolve(APP_ROOT, '..', '..'))
     })

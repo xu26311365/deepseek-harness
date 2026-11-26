@@ -30,6 +30,12 @@ const DSH_PACKAGE = '@deepseek-ai/dsh'
 const CORE_BUILD_PACKAGE = '@deepseek-ai/dsh-subprocess-local'
 const WEB_PROFILE = PROFILE_TEMPLATES.web as ProfileTemplate
 const WORKSPACE_SETTINGS = 'nodeLinker: hoisted\nautoInstallPeers: false\n'
+// Unpublished @vibeinging desktop plugins: the BUILD_ROOT install resolves their exact
+// shipped versions from the tarballs staged beside the runtime project (file: overrides).
+const VENDOR_PLUGIN_OVERRIDES: Readonly<Record<string, string>> = {
+  '@vibeinging/dsh-desktop-chrome': 'file:./vendor-plugins/vibeinging-dsh-desktop-chrome-0.1.0.tgz',
+  '@vibeinging/dsh-desktop-shell': 'file:./vendor-plugins/vibeinging-dsh-desktop-shell-0.1.4.tgz',
+}
 function writeJson(path: string, value: unknown): void {
   writeFileSync(path, `${JSON.stringify(value, undefined, 2)}\n`, { mode: 0o600 })
 }
@@ -133,17 +139,23 @@ export class DesktopProjectManager {
 export function createRuntimeProjectMetadata(projectDir: string, release: DesktopRelease): void {
   mkdirSync(projectDir, { recursive: true, mode: 0o700 })
   const packageSet = verifyDesktopCorePackageSet(projectDir, release.version)
+  // The BUILD_ROOT install is a standalone pnpm project. Its pnpm-workspace.yaml carries the
+  // local core-package file: overrides, plus the @vibeinging file: overrides that redirect the
+  // two unpublished desktop plugins (shipped transitively through @deepseek-ai/dsh) from the
+  // registry 404s to the tarballs staged beside the runtime project. The runtime project's own
+  // dependencies stay the local core set; the @vibeinging packages resolve only via the override.
+  const coreOverrides = desktopCorePackageOverrides(packageSet)
   const manifest = {
     name: PROJECT_NAME,
     private: true,
     version: '0.0.0',
-    dependencies: desktopCorePackageOverrides(packageSet),
+    dependencies: coreOverrides,
     dsh: { profile: { bundles: [...WEB_PROFILE.bundles] } },
   }
   writeJson(join(projectDir, 'package.json'), manifest)
   writeFileSync(
     join(projectDir, 'pnpm-workspace.yaml'),
-    workspaceFile(desktopCorePackageOverrides(packageSet)),
+    workspaceFile({ ...coreOverrides, ...VENDOR_PLUGIN_OVERRIDES }),
     { mode: 0o600 },
   )
 }

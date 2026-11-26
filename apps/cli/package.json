@@ -177,7 +177,16 @@
     "ajv": "^8.20.0",
     "execa": "^10.0.1",
     "ws": "8.21.3",
-    "@deepseek-ai/dsh-deepseek-auth": "workspace:*"
+    "@deepseek-ai/dsh-deepseek-auth": "workspace:*",
+    "dsh-better-sidebar": "0.33.0",
+    "dsh-multimedia-webui-input": "0.1.0",
+    "@linxin666/dsh-client-ui-task-board": "0.4.22",
+    "@vibeinging/dsh-model-inheritance": "0.1.0",
+    "@vibeinging/dsh-desktop-shell": "0.1.4",
+    "@vibeinging/dsh-desktop-chrome": "0.1.0",
+    "dsh-context": "0.87.1",
+    "ds-harness-remote": "0.6.8",
+    "dshmarket": "1.84.1"
   },
   "exports": {
     "./profile-boot": {

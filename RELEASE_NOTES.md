@@ -1,7 +1,6 @@
 # DSH Desktop · Windows x64 · 社区个人版
 
-- 上游基线: deepseek-ai/deepseek-harness @ `4b399c39`（构建版本 0.2.3-alpha.2）
-- 构建 SHA / 日志: 由 workflow 在发布时自动注入（见 Release 页面 build log 链接）
+- 上游基线: deepseek-ai/deepseek-harness @ `4b399c39`（构建版本 0.2.3-alpha.2；构建 SHA、安装器与日志见页首 Build 段）
 
 ## 本轮改动
 

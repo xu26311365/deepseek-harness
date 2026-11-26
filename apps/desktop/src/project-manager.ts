@@ -33,7 +33,6 @@ const WORKSPACE_SETTINGS = 'nodeLinker: hoisted\nautoInstallPeers: false\n'
 // Unpublished @vibeinging desktop plugins: the BUILD_ROOT install resolves their exact
 // shipped versions from the tarballs staged beside the runtime project (file: overrides).
 const VENDOR_PLUGIN_OVERRIDES: Readonly<Record<string, string>> = {
-  '@vibeinging/dsh-desktop-chrome': 'file:./vendor-plugins/vibeinging-dsh-desktop-chrome-0.1.0.tgz',
   '@vibeinging/dsh-desktop-shell': 'file:./vendor-plugins/vibeinging-dsh-desktop-shell-0.1.4.tgz',
 }
 function writeJson(path: string, value: unknown): void {

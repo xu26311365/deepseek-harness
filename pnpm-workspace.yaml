@@ -26,7 +26,6 @@ overrides:
   # The @vibeinging desktop plugins are unpublished (registry 404); resolve the exact
   # shipped versions from the local tarballs so desktop packaging can materialize them.
   '@vibeinging/dsh-desktop-shell': 'file:apps/desktop/vendor-plugins/vibeinging-dsh-desktop-shell-0.1.4.tgz'
-  '@vibeinging/dsh-desktop-chrome': 'file:apps/desktop/vendor-plugins/vibeinging-dsh-desktop-chrome-0.1.0.tgz'
 
 peerDependencyRules:
   allowedVersions:

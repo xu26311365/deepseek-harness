@@ -1,0 +1,70 @@
+name: Package Desktop · Windows · x64 · unsigned · public runner
+
+# Fork-only variant of the official self-hosted packaging flow:
+# runs the same pnpm install + pnpm package:desktop:win:x64:unsigned on a public
+# windows-2025 runner (MSVC/Python/tar preinstalled) and uploads the installer.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-desktop-package-public
+  cancel-in-progress: false
+
+jobs:
+  package:
+    runs-on: windows-2025
+    timeout-minutes: 180
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      DSH_DESKTOP_APP_ID: com.deepseek.dsh
+      DSH_DESKTOP_PACKAGE_CACHE_DIR: D:\dsh-public-cache
+      DSH_TELEMETRY_DISABLED: '1'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v5.0.0
+        with:
+          dest: ${{ runner.temp }}/setup-pnpm-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v7.0.0
+        with:
+          node-version: '^24.22.3'
+
+      - name: Configure tool paths
+        run: |
+          New-Item -ItemType Directory -Path $env:DSH_DESKTOP_PACKAGE_CACHE_DIR -Force | Out-Null
+          node -e "const os=require('node:os'); console.log(JSON.stringify({node:process.version,cpus:os.cpus().length,totalMemoryMB:Math.round(os.totalmem()/1048576)}))"
+          pnpm store path
+          exit $LASTEXITCODE
+
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+        env:
+          PNPM_CONFIG_STORE_DIR: D:\dsh-public-cache\.pnpm-store
+
+      - name: Build unsigned Windows x64 installer
+        run: pnpm run package:desktop:win:x64:unsigned --build-version 0.2.3-alpha.2
+        env:
+          PNPM_CONFIG_STORE_DIR: D:\dsh-public-cache\.pnpm-store
+
+      - name: List unsigned artifacts
+        run: |
+          $dir = 'apps\desktop\.desktop-build\targets\win-x64\unsigned-artifacts'
+          Get-ChildItem -Recurse -File $dir | ForEach-Object { '{0}  {1} bytes' -f $_.FullName, $_.Length }
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: dsh-desktop-win-x64-unsigned-public
+          path: apps/desktop/.desktop-build/targets/win-x64/unsigned-artifacts/
+          retention-days: 14

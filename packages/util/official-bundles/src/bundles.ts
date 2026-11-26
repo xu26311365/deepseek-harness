@@ -23,6 +23,7 @@ export const PROFILE_TEMPLATES: Record<string, ProfileTemplate> = {
       'dsh-context',
       'dsh-multimedia-webui-input',
       'ds-harness-remote',
+      'dshmarket',
     ],
   },
   headless: {

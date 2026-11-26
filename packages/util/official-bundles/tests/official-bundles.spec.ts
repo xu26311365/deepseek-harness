@@ -34,6 +34,7 @@ describe('Shipped profile templates', () => {
         'dsh-context',
         'dsh-multimedia-webui-input',
         'ds-harness-remote',
+        'dshmarket',
       ] },
       headless: { bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-headless'] },
       sdk: { bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-sdk-app'] },

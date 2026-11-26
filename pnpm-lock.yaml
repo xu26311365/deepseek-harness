@@ -593,9 +593,36 @@ importers:
       '@deepseek-ai/schemastery':
         specifier: link:../../vendor/schemastery
         version: link:../../vendor/schemastery
+      '@linxin666/dsh-client-ui-task-board':
+        specifier: 0.4.22
+        version: 0.4.22(@deepseek-ai/dsh@0.2.3-alpha.2(33c8717780c24ec4a563345495c27f50))(react@18.3.1)
+      '@vibeinging/dsh-desktop-chrome':
+        specifier: file:../desktop/vendor-plugins/vibeinging-dsh-desktop-chrome-0.1.0.tgz
+        version: file:apps/desktop/vendor-plugins/vibeinging-dsh-desktop-chrome-0.1.0.tgz(@deepseek-ai/cordis@vendor+cordis)(@deepseek-ai/dsh-client-ui-theme@0.1.5-rc.1(@deepseek-ai/cordis@vendor+cordis))
+      '@vibeinging/dsh-desktop-shell':
+        specifier: file:../desktop/vendor-plugins/vibeinging-dsh-desktop-shell-0.1.4.tgz
+        version: file:apps/desktop/vendor-plugins/vibeinging-dsh-desktop-shell-0.1.4.tgz(@deepseek-ai/cordis@vendor+cordis)(@deepseek-ai/dsh-client-ui-slots@0.2.3-alpha.2(@deepseek-ai/cordis@vendor+cordis))(dshmarket@1.84.1(@deepseek-ai/cordis@vendor+cordis)(@deepseek-ai/dsh-settings@packages+settings+settings)(@deepseek-ai/schemastery@vendor+schemastery))(react@18.3.1)
+      '@vibeinging/dsh-model-inheritance':
+        specifier: 0.1.0
+        version: 0.1.0(@deepseek-ai/cordis@vendor+cordis)(@deepseek-ai/dsh-agent@packages+core+agent)(@deepseek-ai/dsh-invariants@0.1.0-rc.8(@deepseek-ai/cordis@vendor+cordis))
       commander:
         specifier: ^15.0.0
         version: 15.0.0
+      ds-harness-remote:
+        specifier: 0.6.8
+        version: 0.6.8(c1f31389863f60d02dadc84b043a3398)
+      dsh-better-sidebar:
+        specifier: 0.33.0
+        version: 0.33.0(@deepseek-ai/cordis@vendor+cordis)(@deepseek-ai/dsh-agent@packages+core+agent)(@deepseek-ai/dsh-client-locale@0.2.3-alpha.2(@deepseek-ai/cordis@vendor+cordis))(@deepseek-ai/dsh-client-ui-conversation@0.2.3-alpha.2(@deepseek-ai/cordis@vendor+cordis))(@deepseek-ai/dsh-client-ui-input-trigger@0.2.3-alpha.2(@deepseek-ai/cordis@vendor+cordis))(@deepseek-ai/dsh-client-ui-primitives@0.2.3-alpha.2(@deepseek-ai/cordis@vendor+cordis))(@deepseek-ai/dsh-client-ui-settings@0.2.3-alpha.2(@deepseek-ai/cordis@vendor+cordis))(@deepseek-ai/dsh-client-ui-slots@0.2.3-alpha.2(@deepseek-ai/cordis@vendor+cordis))(@deepseek-ai/dsh-host-webserver@packages+host+webserver)(@deepseek-ai/dsh-llm@packages+llm+llm)(@deepseek-ai/dsh-session@packages+core+session)(@deepseek-ai/dsh-settings@packages+settings+settings)(@deepseek-ai/dsh-subagent@packages+subagent+subagent)(@deepseek-ai/dsh-tools@packages+core+tools)(@deepseek-ai/schemastery@vendor+schemastery)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      dsh-context:
+        specifier: 0.87.1
+        version: 0.87.1(@deepseek-ai/cordis@vendor+cordis)(@deepseek-ai/dsh-client-ui-primitives@0.2.3-alpha.2(@deepseek-ai/cordis@vendor+cordis))(@deepseek-ai/dsh-session@packages+core+session)(@deepseek-ai/schemastery@vendor+schemastery)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      dsh-multimedia-webui-input:
+        specifier: 0.1.0
+        version: 0.1.0
+      dshmarket:
+        specifier: 1.84.1
+        version: 1.84.1(@deepseek-ai/cordis@vendor+cordis)(@deepseek-ai/dsh-settings@packages+settings+settings)(@deepseek-ai/schemastery@vendor+schemastery)
       js-yaml:
         specifier: ^4.3.2
         version: 4.3.2
@@ -753,42 +780,15 @@ importers:
       '@deepseek-ai/dsh-webhook-github':
         specifier: workspace:*
         version: link:../../packages/experimental/webhook-github
-      '@linxin666/dsh-client-ui-task-board':
-        specifier: 0.4.22
-        version: 0.4.22(@deepseek-ai/dsh@0.2.3-alpha.2(33c8717780c24ec4a563345495c27f50))(react@18.3.1)
       '@types/js-yaml':
         specifier: ^4.0.9
         version: 4.0.9
       '@types/ws':
         specifier: 8.18.1
         version: 8.18.1
-      '@vibeinging/dsh-desktop-chrome':
-        specifier: file:../desktop/vendor-plugins/vibeinging-dsh-desktop-chrome-0.1.0.tgz
-        version: file:apps/desktop/vendor-plugins/vibeinging-dsh-desktop-chrome-0.1.0.tgz(@deepseek-ai/cordis@vendor+cordis)(@deepseek-ai/dsh-client-ui-theme@0.1.5-rc.1(@deepseek-ai/cordis@vendor+cordis))
-      '@vibeinging/dsh-desktop-shell':
-        specifier: file:../desktop/vendor-plugins/vibeinging-dsh-desktop-shell-0.1.4.tgz
-        version: file:apps/desktop/vendor-plugins/vibeinging-dsh-desktop-shell-0.1.4.tgz(@deepseek-ai/cordis@vendor+cordis)(@deepseek-ai/dsh-client-ui-slots@0.2.3-alpha.2(@deepseek-ai/cordis@vendor+cordis))(dshmarket@1.84.1(@deepseek-ai/cordis@vendor+cordis)(@deepseek-ai/dsh-settings@packages+settings+settings)(@deepseek-ai/schemastery@vendor+schemastery))(react@18.3.1)
-      '@vibeinging/dsh-model-inheritance':
-        specifier: 0.1.0
-        version: 0.1.0(@deepseek-ai/cordis@vendor+cordis)(@deepseek-ai/dsh-agent@packages+core+agent)(@deepseek-ai/dsh-invariants@0.1.0-rc.8(@deepseek-ai/cordis@vendor+cordis))
       ajv:
         specifier: ^8.20.0
         version: 8.20.0
-      ds-harness-remote:
-        specifier: 0.6.8
-        version: 0.6.8(c1f31389863f60d02dadc84b043a3398)
-      dsh-better-sidebar:
-        specifier: 0.33.0
-        version: 0.33.0(@deepseek-ai/cordis@vendor+cordis)(@deepseek-ai/dsh-agent@packages+core+agent)(@deepseek-ai/dsh-client-locale@0.2.3-alpha.2(@deepseek-ai/cordis@vendor+cordis))(@deepseek-ai/dsh-client-ui-conversation@0.2.3-alpha.2(@deepseek-ai/cordis@vendor+cordis))(@deepseek-ai/dsh-client-ui-input-trigger@0.2.3-alpha.2(@deepseek-ai/cordis@vendor+cordis))(@deepseek-ai/dsh-client-ui-primitives@0.2.3-alpha.2(@deepseek-ai/cordis@vendor+cordis))(@deepseek-ai/dsh-client-ui-settings@0.2.3-alpha.2(@deepseek-ai/cordis@vendor+cordis))(@deepseek-ai/dsh-client-ui-slots@0.2.3-alpha.2(@deepseek-ai/cordis@vendor+cordis))(@deepseek-ai/dsh-host-webserver@packages+host+webserver)(@deepseek-ai/dsh-llm@packages+llm+llm)(@deepseek-ai/dsh-session@packages+core+session)(@deepseek-ai/dsh-settings@packages+settings+settings)(@deepseek-ai/dsh-subagent@packages+subagent+subagent)(@deepseek-ai/dsh-tools@packages+core+tools)(@deepseek-ai/schemastery@vendor+schemastery)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      dsh-context:
-        specifier: 0.87.1
-        version: 0.87.1(@deepseek-ai/cordis@vendor+cordis)(@deepseek-ai/dsh-client-ui-primitives@0.2.3-alpha.2(@deepseek-ai/cordis@vendor+cordis))(@deepseek-ai/dsh-session@packages+core+session)(@deepseek-ai/schemastery@vendor+schemastery)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      dsh-multimedia-webui-input:
-        specifier: 0.1.0
-        version: 0.1.0
-      dshmarket:
-        specifier: 1.84.1
-        version: 1.84.1(@deepseek-ai/cordis@vendor+cordis)(@deepseek-ai/dsh-settings@packages+settings+settings)(@deepseek-ai/schemastery@vendor+schemastery)
       execa:
         specifier: ^10.0.1
         version: 10.0.1

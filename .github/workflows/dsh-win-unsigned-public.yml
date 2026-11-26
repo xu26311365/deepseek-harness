@@ -110,8 +110,8 @@ jobs:
           # always reflects the newest installer of the day (a missing tag just no-ops).
           gh release delete $tag --yes 2>$null
           gh release create $tag $exe.FullName `
-            --title "DSH Desktop win-x64 · $tag" `
-            --body $bodyText `
+            --title "DSH Desktop win-x64 $tag" `
+            --notes $bodyText `
             --prerelease `
             --target $env:GITHUB_SHA
           if ($LASTEXITCODE -ne 0) { throw "gh release create failed (exit $LASTEXITCODE)" }

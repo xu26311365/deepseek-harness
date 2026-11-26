@@ -100,11 +100,13 @@ jobs:
           $runNumber = $env:GITHUB_RUN_NUMBER
           $tag = "dsh-win-x64-$runNumber"
           $api = 'https://api.github.com/repos/' + $env:GITHUB_REPOSITORY + '/releases'
-          $bodyText = "DSH Desktop · Windows x64 (round $runNumber, unsigned build 0.2.3-alpha.2)
-
-- Installer: $($exe.Name) ($([math]::Round($exe.Length / 1MB, 1)) MB)
-- Build log: https://github.com/$($env:GITHUB_REPOSITORY)/actions/runs/$($env:GITHUB_RUN_ID)
-- Unsigned community build; run SmartScreen/antivirus as usual."
+          # Single-line YAML block: the whole body must stay inside the indented run
+          # block; a double-quoted string that continues at column 0 would break the
+          # YAML literal block and make GitHub reject the entire workflow.
+          $bodyText = "DSH Desktop · Windows x64 (round $runNumber, unsigned build 0.2.3-alpha.2)`n`n"
+          $bodyText += "- Installer: $($exe.Name) ($([math]::Round($exe.Length / 1MB, 1)) MB)`n"
+          $bodyText += "- Build log: https://github.com/$($env:GITHUB_REPOSITORY)/actions/runs/$($env:GITHUB_RUN_ID)`n"
+          $bodyText += "- Unsigned community build; run SmartScreen/antivirus as usual."
           $release = Invoke-WebRequest -Method Post -Uri $api `
             -Headers @{ Authorization = "token $env:GH_TOKEN"; Accept = 'application/vnd.github+json' } `
             -Body (@{ tag_name = $tag; name = "DSH Desktop win-x64 · round $runNumber"; prerelease = $true; target_commitish = $env:GITHUB_SHA; body = $bodyText } | ConvertTo-Json) `

@@ -534,7 +534,8 @@ async function main(): Promise<void> {
   const backend = new DesktopBackendController((onFailure) => {
     const hostInspectPort = developmentHostInspectPort(development)
     const host = new DesktopHostProcess(resources.node, resources.dsh, activeProject,
-      hostInspectPort, { ...hostEnvironment, DSH_CLIENT_VERSION: desktopClientVersion() }, onFailure,
+      // DSH_TELEMETRY_DISABLED keeps the shipped build free of official telemetry regardless of the launch environment.
+      hostInspectPort, { ...hostEnvironment, DSH_CLIENT_VERSION: desktopClientVersion(), DSH_TELEMETRY_DISABLED: '1' }, onFailure,
       primaryRuntime,
       resources, (next) => { platformView.setSession(next) }, (record) => {
         operationJournal ??= new OperationJournal(join(app.getPath('userData'), 'plugin-operations'), {
@@ -1164,7 +1165,7 @@ async function main(): Promise<void> {
   const applicationIconPath = development ? join(app.getAppPath(), 'resources', 'icon-windows.png')
     : join(process.resourcesPath, 'icon.png')
   app.setAboutPanelOptions({
-    applicationName: 'DeepSeek Harness',
+    applicationName: 'DSH Desktop',
     applicationVersion: app.getVersion(),
     // The release has no separate build number; omit Electron's bundle version.
     version: '',
@@ -1557,6 +1558,11 @@ async function main(): Promise<void> {
   })
 
   mainWindow = createMainWindow()
+  // Reveal the official boot page immediately; the backend keeps starting in the background and the
+  // same navigation promise is reused by reconcileBackend, so the placeholder and the real load share
+  // one navigation.
+  void navigateMain(applicationUrl).catch((error: unknown) => { reportFatal(error, 'main') })
+  mainWindow.show()
   if (typeof manifest !== 'object' || manifest === null) throw new Error('desktop policy: invalid application manifest')
   const developmentPolicy = app.isPackaged ? undefined : process.env.DSH_DESKTOP_MANDATORY_UPDATE_CONFIG
   const policyInput: unknown = app.isPackaged

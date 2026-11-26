@@ -1,6 +1,6 @@
-﻿<# Remove only owned registrations; independently failed operations leave a diagnostic report. #>
+<# Remove only owned registrations; independently failed operations leave a diagnostic report. #>
 param([Parameter(Mandatory)][string]$Directory,
-    [string]$ExecutableName = 'DeepSeek Harness.exe',
+    [string]$ExecutableName = 'DSH Desktop.exe',
     [Parameter(Mandatory)][string]$EnvironmentKey,
     [Parameter(Mandatory)][string]$OwnerKey,
     [Parameter(Mandatory)][string]$ProtocolKey,

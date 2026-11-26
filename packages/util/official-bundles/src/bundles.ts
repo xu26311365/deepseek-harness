@@ -12,7 +12,18 @@ export const PROFILE_TEMPLATES: Record<string, ProfileTemplate> = {
     bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-acp-app'],
   },
   web: {
-    bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app'],
+    bundles: [
+      '@deepseek-ai/dsh-base',
+      '@deepseek-ai/dsh-web-app',
+      '@linxin666/dsh-client-ui-task-board',
+      '@vibeinging/dsh-desktop-chrome',
+      '@vibeinging/dsh-desktop-shell',
+      '@vibeinging/dsh-model-inheritance',
+      'dsh-better-sidebar',
+      'dsh-context',
+      'dsh-multimedia-webui-input',
+      'ds-harness-remote',
+    ],
   },
   headless: {
     bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-headless'],

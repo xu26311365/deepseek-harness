@@ -23,7 +23,18 @@ describe('Shipped profile templates', () => {
   it('stack each mode bundle on base except the standalone minimal SDK', () => {
     expect(PROFILE_TEMPLATES).toEqual({
       acp: { bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-acp-app'] },
-      web: { bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app'] },
+      web: { bundles: [
+        '@deepseek-ai/dsh-base',
+        '@deepseek-ai/dsh-web-app',
+        '@linxin666/dsh-client-ui-task-board',
+        '@vibeinging/dsh-desktop-chrome',
+        '@vibeinging/dsh-desktop-shell',
+        '@vibeinging/dsh-model-inheritance',
+        'dsh-better-sidebar',
+        'dsh-context',
+        'dsh-multimedia-webui-input',
+        'ds-harness-remote',
+      ] },
       headless: { bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-headless'] },
       sdk: { bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-sdk-app'] },
       'sdk-minimal': { bundles: ['@deepseek-ai/dsh-sdk-minimal'] },

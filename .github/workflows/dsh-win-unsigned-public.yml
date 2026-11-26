@@ -81,8 +81,10 @@ jobs:
           Get-ChildItem -Recurse -File $dir | ForEach-Object { '{0}  {1} bytes' -f $_.FullName, $_.Length }
 
       - name: Upload installer
+        # Upload only the NSIS installer; win-unpacked/ and the blockmap keep the local directory
+        # but never reach the artifact, so it stays as small as the executable itself.
         uses: actions/upload-artifact@v7.0.1
         with:
           name: dsh-desktop-win-x64-unsigned-public
-          path: apps/desktop/.desktop-build/targets/win-x64/unsigned-artifacts/
+          path: apps/desktop/.desktop-build/targets/win-x64/unsigned-artifacts/dsh-desktop-*.exe
           retention-days: 14

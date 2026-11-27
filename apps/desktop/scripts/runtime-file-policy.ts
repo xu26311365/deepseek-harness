@@ -1,5 +1,19 @@
 /** Desktop-only omissions from already installed production npm packages. */
 
+/** Dot-named directories: package-manager state and tooling trees that never hold runtime assets. */
+const TOOLING_DOT_DIRECTORIES = new Set([
+  '.bin', '.cache', '.circleci', '.git', '.github', '.gitlab', '.hg', '.husky',
+  '.idea', '.nyc_output', '.pnpm', '.svn', '.vs', '.yarn',
+])
+
+/** Dot-named files: OS, VCS and package-manager metadata that never hold runtime assets. */
+const METADATA_DOT_FILES = new Set([
+  '.DS_Store', '.flowconfig', '.gitattributes', '.gitignore', '.gitkeep',
+  '.jshintrc', '.modules.yaml', '.npmignore',
+  '.pnpm-workspace-state-v1.json', '.yarn-data.json', '.yarn-integrity',
+  '.yarn-metadata.json', '.yarnrc', '.yarnrc.yml',
+])
+
 /**
  * Identify build, diagnostic and other-platform files omitted from the immutable Desktop runtime.
  * Unrecognized assets and target runtime binaries are retained. Paths name the copied
@@ -13,11 +27,17 @@ export function desktopRuntimeFileExclusion(
   path: string, target: { platform: NodeJS.Platform; arch: string }, officeEngine: string,
 ): string | undefined {
   const parts = path.split(/[\\/]/u)
-  // The ASAR builder's glob omits dot-named entries, so the sealed inventory must
-  // match: exclude every dot-named file or directory at any depth (package-manager
-  // metadata, VCS placeholders such as .gitkeep, tooling trees such as .yarn).
-  if (parts.some(part => part.startsWith('.'))) return 'dot entry omitted by the ASAR builder'
+  // Dot-named directories are package-manager state and tooling trees: omit the whole
+  // subtree. Dot-named files still ship — the ASAR builder's minimatch runs with
+  // dot:true, so the sealed inventory must keep runtime assets such as
+  // @earendil-works/pi-ai's providers/data/.manifest.json; only known package-manager,
+  // VCS and OS metadata stays out.
+  if (parts.slice(0, -1).some(part => part.startsWith('.'))) return 'dot directory omitted from the Desktop runtime'
   const file = parts.at(-1)!
+  if (file.startsWith('.')) {
+    if (TOOLING_DOT_DIRECTORIES.has(file)) return 'package-manager tooling tree'
+    if (METADATA_DOT_FILES.has(file)) return 'package-manager or VCS metadata'
+  }
   if (/\.(?:[cm]?[jt]s|css)\.map$/u.test(file)) return 'source map'
   if (/\.d\.[cm]?ts$/u.test(file)) return 'TypeScript declaration'
   if (/\.tsbuildinfo$/u.test(file)) return 'TypeScript build cache'

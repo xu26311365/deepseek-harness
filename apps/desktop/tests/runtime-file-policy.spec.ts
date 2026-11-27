@@ -32,11 +32,14 @@ it('omits development artifacts while preserving executable modules, assets and 
     '@deepseek-ai/libreoffice-kit-wasm/assets/soffice.data',
     '@deepseek-ai/libreoffice-kit-darwin-arm64/bin/dsoffice',
     '.modules.yaml', '.pnpm-workspace-state-v1.json', '.bin/tool', '.pnpm/cache',
-    // Dot entries the ASAR builder's glob omits; the sealed inventory must match.
+    // Package-manager tooling trees and metadata stay out; unknown dot directories
+    // are omitted with their subtrees.
     'example/.yarn/runtime.cjs', '@mixmark-io/domino/.yarn-data.json',
     'dshmarket/node_modules/undici/lib/llhttp/.gitkeep',
   ]
   const retained = [
+    // Runtime dot-named files ship: the ASAR builder's minimatch runs with dot:true.
+    '@earendil-works/pi-ai/dist/providers/data/.manifest.json',
     'example/index.js', 'example/index.cjs', 'example/index.mjs', 'example/worker.js',
     'example/source.ts', 'example/src/entry.ts', 'example/test/runtime-fixture.json',
     'example/locale.json', 'example/data.map', 'example/module.wasm',

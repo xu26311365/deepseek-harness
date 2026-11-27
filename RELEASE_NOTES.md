@@ -4,9 +4,8 @@
 
 ## 本轮改动
 
-1. **cobalt2 主题烘焙为默认外观**: 删除 `dsh-cool-theme` 插件，将其 cobalt2 预设（dsh-cool-theme@0.11.1）精确复刻成内置色板覆盖层 `packages/client/ui-theme/src/styles/cobalt2.css`（174 行，light/dark 双选择器），挂在主题样式级联最后；删插件后应用开箱即呈 Cobalt2 外观。
-2. **dsh-market-panel 取代 @vibeinging/dsh-desktop-shell**: 保留"把 dshmarket 插件市场提为首页一级面板"功能，删除左下角分享与 Star 整块（footer 注入 / StarIcon / ShareIcon / 菜单与 CSS），更名为 `dsh-market-panel@0.2.0`（本地 vendor tarball，MIT），全仓引用点与 file: override 同步。
-3. **删除 @linxin666/dsh-client-ui-task-board**: 全仓引用点（cli deps / web 模板 / spec）干净移除。
+1. **dsh-market-panel 取代 @vibeinging/dsh-desktop-shell**: 保留"把 dshmarket 插件市场提为首页一级面板"功能，删除左下角分享与 Star 整块（footer 注入 / StarIcon / ShareIcon / 菜单与 CSS），更名为 `dsh-market-panel@0.2.0`（本地 vendor tarball，MIT），全仓引用点与 file: override 同步。
+2. **删除 @linxin666/dsh-client-ui-task-board**: 全仓引用点（cli deps / web 模板 / spec）干净移除。
 
 ## 累计改动（自上游基线 4b399c39）
 

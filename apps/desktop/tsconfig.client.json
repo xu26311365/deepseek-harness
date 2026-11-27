@@ -6,7 +6,6 @@
   },
   "include": [
     "src/client",
-    "src/welcome-api.ts",
     "src/locale.ts"
   ],
   "references": [

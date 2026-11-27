@@ -30,6 +30,12 @@ export interface DesktopWelcomeBackend {
    * @returns A safe write outcome without provider diagnostics.
    */
   save(apiKey: string): Promise<{ ok: boolean }>
+  /**
+   * Pre-complete the in-app Desktop onboarding so the Web document never mounts
+   * its first-launch overlay. Reuses the official settings write channel.
+   * @returns whether a marker write was performed.
+   */
+  markOnboardingSkipped(): Promise<boolean>
 }
 
 function record(value: unknown): value is Record<string, unknown> {
@@ -154,6 +160,30 @@ export function connectDesktopWelcome(
         // Provider diagnostics may contain credentials; the native form owns failure copy.
         return { ok: false }
       }
+    },
+    async markOnboardingSkipped() {
+      // The Web document's first-launch onboarding overlay (ui-settings-account) only mounts
+      // while its persisted progress is incomplete. Pre-completing it through the official
+      // settings write channel keeps the community shell's startup window-free. The marker is
+      // idempotent: an already-done or already-skipped progress never rewrites.
+      const settings = await invoke({ namespace: 'settings', method: 'describe', args: {} })
+      if (!record(settings) || !Array.isArray(settings.namespaces)) throw new Error('desktop onboarding: missing settings namespaces')
+      const namespace = settings.namespaces.find((item: unknown) => record(item) && item.ns === 'ui-settings-account')
+      if (namespace === undefined) return false
+      const value = record(namespace) ? namespace.value : undefined
+      if (record(value) && value.step === 'done') return false
+      await invoke({
+        namespace: 'settings',
+        method: 'mutate',
+        args: {
+          ns: 'ui-settings-account',
+          ops: [
+            { op: 'set', path: ['step'], value: 'done' },
+            { op: 'set', path: ['completion'], value: 'skipped' },
+          ],
+        },
+      })
+      return true
     },
   }
 }

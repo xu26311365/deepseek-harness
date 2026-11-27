@@ -5,75 +5,72 @@
 /:
   en: 0d36989eb614345d
   zh: a0a1a18c07621393
-/deepseek-harness-desktop:
-  en: 69a6e0c6712e463b
-  zh: 84e1d0b09c803704
-/deepseek-harness-desktop/summary:
+/dsh-desktop-desktop:
+  en: d78b0d7523f48ede
+  zh: bb29fb54245ca0f5
+/dsh-desktop-desktop/summary:
   en: 7bc8bf30de693222
   zh: e85993d8852b6cab
-/deepseek-harness-desktop/table-of-contents:
+/dsh-desktop-desktop/table-of-contents:
   en: 127ea90553cb6af7
   zh: 7b1c5aec8558c684
-/deepseek-harness-desktop/application-overview:
-  en: 7414f87908fbffaf
-  zh: 8ff4fc1d83879c25
-/deepseek-harness-desktop/terminal-command:
-  en: 988bf8bb84cf7c9a
-  zh: 28cefc949c7f52ce
-/deepseek-harness-desktop/closing-the-window-and-quitting:
-  en: bb35a022c37955c9
-  zh: ab2ef22d398d83a0
-/deepseek-harness-desktop/key-technical-decisions:
+/dsh-desktop-desktop/application-overview:
+  en: af6e06fc0f810ac7
+  zh: fda304ab68415f6f
+/dsh-desktop-desktop/terminal-command:
+  en: 819409bb1f880288
+  zh: cfd76075e871cbac
+/dsh-desktop-desktop/closing-the-window-and-quitting:
+  en: 234479aa0ec4c73e
+  zh: 50b18ff2d54f42c8
+/dsh-desktop-desktop/key-technical-decisions:
   en: 19642526da04f108
   zh: 506ea427d46bb38f
-/deepseek-harness-desktop/key-technical-decisions/bundled-workspace-dependencies:
-  en: 764bdc09fa8f5701
-  zh: da7897e14434b43c
-/deepseek-harness-desktop/bundled-command-runtime:
+/dsh-desktop-desktop/key-technical-decisions/bundled-workspace-dependencies:
+  en: 6e82ee906e5e26eb
+  zh: 9cffa8c6079acf49
+/dsh-desktop-desktop/bundled-command-runtime:
   en: 372297005b57a08b
   zh: 074a635ac17e4362
-/deepseek-harness-desktop/installation-ownership:
-  en: 3d3b0e92079a4ef7
-  zh: 4ab572bf57f4c55c
-/deepseek-harness-desktop/installation-ownership/runtime-and-plugin-activation:
+/dsh-desktop-desktop/installation-ownership:
+  en: 7ef1d59abb206c48
+  zh: f111eca1214ce633
+/dsh-desktop-desktop/installation-ownership/runtime-and-plugin-activation:
   en: 4951cd3ee659eb33
   zh: 96bdd6358dad587a
-/deepseek-harness-desktop/installation-ownership/host-environment:
+/dsh-desktop-desktop/installation-ownership/host-environment:
   en: 98cf848762482d48
   zh: 74f9100a39ec8c2f
-/deepseek-harness-desktop/develop:
+/dsh-desktop-desktop/develop:
   en: 4e4b26cfaaa098ee
   zh: e0a2965606020041
-/deepseek-harness-desktop/develop/startup-onboarding:
-  en: 67dc7ef3e293236a
-  zh: 1b224db684a2d1d7
-/deepseek-harness-desktop/develop/welcome-window-appearance:
-  en: 617a89aeb28131b9
-  zh: 4d84bd5d86501c86
-/deepseek-harness-desktop/package:
+/dsh-desktop-desktop/develop/startup-onboarding:
+  en: a11a0d1e5cbca367
+  zh: be59789714cf63f3
+/dsh-desktop-desktop/package:
   en: 7200a35dbed997c3
   zh: 511d6961530757f1
-/deepseek-harness-desktop/windows-installer-interface:
+/dsh-desktop-desktop/windows-installer-interface:
   en: 80f8f18b571864b6
   zh: 45af1d593b7e1b64
-/deepseek-harness-desktop/updates:
-  en: 8b0b9efeb83727ef
-  zh: 5ee95de48ceab392
-/deepseek-harness-desktop/updates/local-desktop-settings:
+/dsh-desktop-desktop/updates:
+  en: b6078674cc0d89ac
+  zh: 41b0bd58c2686baf
+/dsh-desktop-desktop/updates/local-desktop-settings:
   en: dbe57394894b7368
   zh: a3bb788c2ce631a4
-/deepseek-harness-desktop/updates/mandatory-update-policy:
-  en: 182a9c6705213e13
-  zh: 681762f83490f4c6
-/deepseek-harness-desktop/updates/local-updater-qualification:
+/dsh-desktop-desktop/updates/mandatory-update-policy:
+  en: 7a8636d18fedfbd6
+  zh: 5fce7cbf086b970d
+/dsh-desktop-desktop/updates/local-updater-qualification:
   en: db5e898140a73d53
   zh: 80a9d58c74b4bb24
-/deepseek-harness-desktop/low-level-development-overrides:
+/dsh-desktop-desktop/low-level-development-overrides:
   en: 8264b135871e8978
   zh: 0939aafb1b2961fc
-/deepseek-harness-desktop/known-limitations:
-  en: b1eeadfefb338056
-  zh: 28683fbdf1e98685
-/deepseek-harness-desktop/dev-note:
+/dsh-desktop-desktop/known-limitations:
+  en: 388248fd9e694814
+  zh: e801c03b4f9d5734
+/dsh-desktop-desktop/dev-note:
   en: 8e26b460ba31f21b
   zh: fbcd0307b3867125

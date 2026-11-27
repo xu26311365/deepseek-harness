@@ -6,7 +6,7 @@ import { registerHooks } from 'node:module'
 import { appendFile, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { app, BrowserWindow, Menu, webContents } from 'electron'
+import { app, BrowserWindow, webContents } from 'electron'
 import updaterModule from 'electron-updater'
 import { createUpdateServer } from './update-server.mjs'
 import { fixture } from './workspace-update-adapters.mjs'
@@ -207,26 +207,18 @@ async function qualify() {
     console.log('workspace qualification: startup API requests settled')
     const messages = resolveDesktopLocale(app.getLocale()).messages
     await screenshot(mainWindow, 'workspace.png')
-    let menu
-    if (process.platform === 'win32') {
-      const popup = Menu.prototype.popup
-      try {
-        Menu.prototype.popup = function (options) { menu = this.items; options.callback?.() }
-        await mainWindow.webContents.executeJavaScript("document.querySelector('[data-windows-menu]').shadowRoot.querySelector('button').click()")
-        await waitFor(() => menu !== undefined, 'Windows application menu')
-      } finally { Menu.prototype.popup = popup }
-    } else menu = Menu.getApplicationMenu().items[0].submenu.items
-    const checkMenu = menu.find(item => item.label === messages.checkUpdatesMenu)
-    assert.ok(checkMenu)
+    // The application menu no longer offers a Check-for-Updates item; the renderer's update
+    // entry (window.dshDesktop.updates.open) opens the same ordinary update prompt.
+    const checkUpdates = async () => mainWindow.webContents.executeJavaScript('window.dshDesktop.updates.open()')
     if (interactive) {
       const { runInteractiveUpdates } = await import('./workspace-updates-interactive.mjs')
-      await runInteractiveUpdates({ mainWindow, server, fixture, checkMenu, control, root })
+      await runInteractiveUpdates({ mainWindow, server, fixture, checkUpdates, control, root })
       return
     }
     const cases = ['real-workspace-preload-and-host']
 
     server.select('hold-check', '0.1.5-rc.1')
-    checkMenu.click()
+    await checkUpdates()
     await server.arrived()
     const checking = await dialogWith(messages.updateChecking)
     await screenshot(checking, 'checking.png')
@@ -239,7 +231,7 @@ async function qualify() {
     console.log('workspace qualification: manual no-update feedback complete')
 
     server.select('healthy', '0.1.6-nightly.1')
-    checkMenu.click()
+    await checkUpdates()
     const available = await dialogWith(messages.updateAvailable.replace('{version}', '0.1.6-nightly.1'))
     server.select('corrupt', '0.1.6-nightly.1')
     await clickText(available, messages.updateDownload)
@@ -293,7 +285,7 @@ async function qualify() {
     console.log('workspace qualification: real task confirmation and deferral complete')
 
     server.policy('force')
-    checkMenu.click()
+    await checkUpdates()
     console.log('workspace qualification: mandatory check dispatched')
     const mandatory = await windowAt('dsh-app://shell/mandatory-update.html')
     console.log('workspace qualification: mandatory window loaded')
@@ -320,13 +312,13 @@ async function qualify() {
     assert.equal((await control('status')).queued, 1)
     await screenshot(mandatory, 'mandatory-block.png')
     server.policy('failure')
-    checkMenu.click()
+    await checkUpdates()
     await waitFor(async () => (await mandatory.webContents.executeJavaScript('window.dshMandatoryUpdate.status()')).policy.error === 'unavailable', 'retained policy failure')
     assert.equal(await mandatory.webContents.executeJavaScript("document.getElementById('error').hidden"), true)
     assert.equal((await control('status')).queued, 1)
     await screenshot(mandatory, 'mandatory-retained-error.png')
     server.policy('clear')
-    checkMenu.click()
+    await checkUpdates()
     await waitFor(() => mandatory.isDestroyed(), 'fresh no-force response to clear the modal')
     assert.equal(mainWindow.isEnabled(), true)
     assert.equal(fixture.installations.length, 0)
@@ -361,7 +353,7 @@ async function qualify() {
     cases.push('non-graceful-stop-restores-host-and-requires-fresh-install-confirmation')
 
     server.policy('force')
-    checkMenu.click()
+    await checkUpdates()
     let forcedRecovery = await windowAt('dsh-app://shell/mandatory-update.html')
     await waitFor(() => mainWindow.isEnabled(), 'ordinary modal releases the main window for recovery')
     await press(forcedRecovery, `document.getElementById('update')`)
@@ -390,7 +382,7 @@ async function qualify() {
     assert.equal(mainWindow.isEnabled(), true)
     assert.equal(fixture.installations.length, 0)
     server.policy('clear')
-    checkMenu.click()
+    await checkUpdates()
     await waitFor(() => forcedRecovery.isDestroyed(), 'mandatory recovery policy clearance')
     cases.push('mandatory-stop-recovery-preserves-block-and-requires-fresh-install-confirmation')
     await writeFile(join(root, 'result.json'), JSON.stringify({ realElectron: true, realHostProcess: true,

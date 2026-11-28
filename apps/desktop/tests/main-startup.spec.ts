@@ -9,6 +9,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { tmpdir } from 'node:os'
 import type { MenuItemConstructorOptions, MessageBoxOptions } from 'electron'
 import { DESKTOP_IPC, type DesktopUpdateState } from '../src/ipc.ts'
+import { WELCOME_IPC } from '../src/welcome-api.ts'
 import { MANDATORY_IPC } from '../src/mandatory-update-ipc.ts'
 import { DesktopHostFatalError, DesktopHostUncleanExitError } from '../src/host-process.ts'
 import { en, zh } from '../src/locale.ts'
@@ -1467,7 +1468,7 @@ describe('desktop main startup', () => {
   it.each([
     ['darwin', 'Command+,'],
     ['win32', 'Control+,'],
-  ] as const)('gates Settings menu availability across workspace, window restore, sign-out, and mandatory updates (%s)', async (platform, expectedAccelerator) => {
+  ] as const)('gates Settings menu availability across welcome, workspace, window restore, sign-out, and mandatory updates (%s)', async (platform, expectedAccelerator) => {
     vi.spyOn(process, 'platform', 'get').mockReturnValue(platform)
     harness.embeddedPolicy = { origin: 'https://policy.example.com', allowedPageOrigins: ['https://downloads.example.com'] }
     const policyFetch = vi.fn<typeof fetch>()
@@ -1478,23 +1479,25 @@ describe('desktop main startup', () => {
     harness.prepared.resolve()
     await harness.hostStarted.promise
     const host = harness.hosts[0]!
-    host.fetch.mockResolvedValue(Response.json({ loggedIn: false, hasApiKey: false, writable: true, localePreference: null, themePreference: 'system' }))
+    host.fetch.mockResolvedValueOnce(Response.json({ loggedIn: false, hasApiKey: false, writable: true, localePreference: null, themePreference: 'system' }))
     host.ready.resolve()
+    await vi.waitFor(() => { expect(harness.windows).toHaveLength(2) })
     const mainWindow = harness.windows[0]!
-    await vi.waitFor(() => { expect(mainWindow.show).toHaveBeenCalledTimes(2) })
+    const welcomeWindow = harness.windows[1]!
     const registered = await Promise.resolve(invoke(DESKTOP_IPC.shortcutsGet, 'app', [
       { id: 'settings.open', defaults: { 'desktop:macos': { code: 'Comma', modifiers: ['primary'] }, 'desktop:windows': { code: 'Comma', modifiers: ['primary'] } } },
     ])) as { revision: string }
 
     const settingsItem = () => applicationMenuItems().find(item => item.id === 'dsh-settings-open')!
-    expect(settingsItem()).toMatchObject({ label: en.settingsMenu, enabled: true, accelerator: expectedAccelerator })
+    expect(settingsItem()).toMatchObject({ label: en.settingsMenu, enabled: false, accelerator: expectedAccelerator })
     mainWindow.show.mockClear()
     mainWindow.webContents.send.mockClear()
     ;(settingsItem().click as () => void)()
-    expect(mainWindow.show).toHaveBeenCalledOnce()
-    expect(mainWindow.webContents.send).toHaveBeenCalledWith(DESKTOP_IPC.shortcutsInput, {
-      kind: 'menu', commandId: 'settings.open', revision: registered.revision,
-    })
+    expect(mainWindow.show).not.toHaveBeenCalled()
+    expect(mainWindow.webContents.send).not.toHaveBeenCalled()
+
+    await harness.handlers.get(WELCOME_IPC.skip)!({ sender: welcomeWindow.webContents, senderFrame: welcomeWindow.webContents.mainFrame })
+    expect(settingsItem()).toMatchObject({ label: en.settingsMenu, enabled: true, accelerator: expectedAccelerator })
 
     mainWindow.minimized = true
     mainWindow.visible = false
@@ -1511,10 +1514,16 @@ describe('desktop main startup', () => {
       kind: 'menu', commandId: 'settings.open', revision: registered.revision,
     })
 
+    host.fetch.mockResolvedValueOnce(Response.json({ loggedIn: false, hasApiKey: false }))
     harness.publishAccount({ status: 'credential-stored', attempt: null, links: { usageUrl: '', topUpUrl: '' } })
     harness.publishAccount({ status: 'signed-out', attempt: null, links: { usageUrl: '', topUpUrl: '' } })
     await vi.waitFor(() => { expect(settingsItem().enabled).toBe(false) })
-    expect(harness.windows).toHaveLength(1)
+    expect(harness.windows.length).toBeGreaterThanOrEqual(3)
+    const reopenedWelcome = harness.windows[2]!
+    await harness.handlers.get(WELCOME_IPC.skip)!({
+      sender: reopenedWelcome.webContents, senderFrame: reopenedWelcome.webContents.mainFrame,
+    })
+    expect(settingsItem().enabled).toBe(true)
 
     policyFetch.mockResolvedValueOnce(Response.json({ code: 40005,
       data: { show_content: { title: 'Update', detail: 'Required' }, desktop_app_link: 'https://downloads.example.com/' } }))

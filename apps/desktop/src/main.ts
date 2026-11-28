@@ -13,6 +13,7 @@ import { fileURLToPath } from 'node:url'
 import {
   app,
   BrowserWindow,
+  clipboard,
   dialog,
   ipcMain,
   Menu,
@@ -47,6 +48,8 @@ import { DesktopFatalRecovery } from './fatal-recovery.ts'
 import { pruneCrashReports, RendererConsoleTail, writeCrashReport, type CrashReportSource } from './crash-report.ts'
 import { OperationJournal } from './operation-journal.ts'
 import { runOperationReportJob, type OperationReportJobResult } from './operation-report-job.ts'
+import { openWelcomeWindow } from './welcome-window.ts'
+import { WELCOME_IPC, needsWelcome, type WelcomeNotice } from './welcome-api.ts'
 import { connectDesktopWelcome, type DesktopWelcomeBackend } from './welcome-backend.ts'
 import { DesktopUpdateJournal } from './update-journal.ts'
 import { DesktopUpdatePreparationError } from './update-error.ts'
@@ -404,6 +407,7 @@ async function main(): Promise<void> {
   let startup: Promise<void> | undefined
   let workspaceRecovery: Promise<void> | undefined
   let mainWindow: BrowserWindow | undefined
+  let welcomeWindow: BrowserWindow | undefined
   const installFileDrag = (): (() => Promise<void>) => installDesktopFileDrag(
     event => assertProductSender(event),
     (address, signal) => {
@@ -451,7 +455,7 @@ async function main(): Promise<void> {
   const isQuitting = (): boolean => quitting
   const currentMainWindow = (): BrowserWindow | undefined => mainWindow
   const ordinaryDialogs = new Set<AbortController>()
-  const currentDialogWindow = (): BrowserWindow | undefined => mainWindow
+  const currentDialogWindow = (): BrowserWindow | undefined => welcomeWindow ?? mainWindow
   const updateOverlays = new DesktopUpdateOverlays()
   const updateDialog = new DesktopUpdateDialog(fileURLToPath(new URL('./preload-update-dialog.cjs', import.meta.url)), () => locale, updateOverlays)
   const isMandatory = (): boolean => mandatoryPolicy?.state.blocking === true
@@ -499,6 +503,7 @@ async function main(): Promise<void> {
   let stopAccount: (() => void) | undefined
   let openedAttempt: string | undefined
   let returnedAttempt: string | undefined
+  let pendingWelcomeNotice: WelcomeNotice | undefined
   let previousAccountStatus: string | undefined
   const assertProductSender = (event: IpcMainInvokeEvent): BrowserWindow => {
     assertDesktopSender(event, ['app'])
@@ -550,8 +555,8 @@ async function main(): Promise<void> {
         injections = ready.injections
         welcomeBackend = connectDesktopWelcome(ready.url, cookie)
         analyticsEnabled = await welcomeBackend.analyticsEnabled().catch(() => false)
-        // The community shell never shows a native welcome page: pre-complete the Web
-        // document's in-app first-launch onboarding through the official settings channel.
+        // Pre-complete the Web document's in-app first-launch onboarding through the official
+        // settings channel so the shared UI does not replay it on first run.
         void welcomeBackend.markOnboardingSkipped().catch((error: unknown) => {
           console.warn('desktop onboarding: completion marker failed', error)
         })
@@ -560,6 +565,7 @@ async function main(): Promise<void> {
         const accountBackend = welcomeBackend.account
         stopAccount = accountBackend.watch((state) => {
           if (quitting) return
+          if (welcomeWindow !== undefined && !welcomeWindow.isDestroyed()) welcomeWindow.webContents.send(WELCOME_IPC.state, state)
           const attempt = state.attempt
           if (attempt?.phase === 'waiting-browser' && attempt.authorizeUrl !== undefined && openedAttempt !== attempt.id) {
             openedAttempt = attempt.id
@@ -569,25 +575,35 @@ async function main(): Promise<void> {
             returnedAttempt = attempt.id
             focusPrimaryWindow()
           }
-          if (state.status === 'credential-stored' && attempt?.phase === 'succeeded') void enterWorkspace({ activate: false }).catch(() => undefined)
-          // Signing out leaves the workspace: the account entry is owned by the in-app settings pages
-          // (settings.models sign-in / openAccount), so no native welcome page re-pops.
+          if (state.status === 'credential-stored' && attempt?.phase === 'succeeded' && welcomeWindow !== undefined) void enterWorkspace({ activate: false }).catch(() => undefined)
           if (previousAccountStatus === 'credential-stored' && state.status === 'signed-out') {
-            if (enteredWorkspace) {
-              enteredWorkspace = false
-              refreshApplicationMenu()
-            }
+            void readWelcomeState().then(async (value) => {
+              if (needsWelcome(value) && !quitting) {
+                if (enteredWorkspace) {
+                  enteredWorkspace = false
+                  refreshApplicationMenu()
+                }
+                await showWelcome()
+                if (welcomeWindow !== undefined && !welcomeWindow.isDestroyed()) welcomeWindow.webContents.send(WELCOME_IPC.state, state)
+              }
+              return undefined
+            }).catch(() => undefined)
           }
           previousAccountStatus = state.status
         }, () => {
           // The stream reconnects; a transport failure does not change account state.
         }, () => {
-          // Credential expiry keeps the workspace: re-authentication is the in-app account entry, and no
-          // native welcome page pops on top of a running session.
-          if (enteredWorkspace) {
-            enteredWorkspace = false
-            refreshApplicationMenu()
-          }
+          void readWelcomeState().then(async (value) => {
+            if (!needsWelcome(value) || quitting) return
+            pendingWelcomeNotice = 'session-expired'
+            if (enteredWorkspace) {
+              enteredWorkspace = false
+              refreshApplicationMenu()
+            }
+            await showWelcome()
+            const state = await accountBackend.state()
+            if (welcomeWindow !== undefined && !welcomeWindow.isDestroyed()) welcomeWindow.webContents.send(WELCOME_IPC.state, state)
+          }).catch(() => undefined)
         }, (enabled) => { analyticsEnabled = enabled })
       },
       stop: async () => {
@@ -1376,6 +1392,11 @@ async function main(): Promise<void> {
     const wasInWorkspace = enteredWorkspace
     enteredWorkspace = true
     if (!wasInWorkspace) refreshApplicationMenu()
+    if (welcomeWindow !== undefined) {
+      welcomeWindow.close()
+      window.webContents.send(DESKTOP_IPC.enterWorkspace)
+    }
+    welcomeWindow = undefined
     if (raiseAfterUpdate) {
       raiseAfterUpdate = false
       window.moveTop()
@@ -1384,6 +1405,68 @@ async function main(): Promise<void> {
     if (activate && development && process.env.DSH_DESKTOP_OPEN_DEVTOOLS !== '0') {
       window.webContents.openDevTools({ mode: 'detach' })
     }
+  }
+  let openingWelcome: Promise<void> | undefined
+  const showWelcome = (): Promise<void> => {
+    if (quitting) return Promise.resolve()
+    if (welcomeWindow !== undefined && !welcomeWindow.isDestroyed()) {
+      if (!welcomeWindow.isVisible()) void track('auth_page_view', {})
+      welcomeWindow.show()
+      welcomeWindow.focus()
+      return Promise.resolve()
+    }
+    openingWelcome ??= (async () => {
+      welcomeWindow = await openWelcomeWindow(locale, {
+        analytics: track,
+        analyticsEnabled: () => Promise.resolve(analyticsEnabled),
+        takeNotice: () => {
+          const notice = pendingWelcomeNotice
+          pendingWelcomeNotice = undefined
+          return Promise.resolve(notice)
+        },
+        startSignIn: async () => {
+          if (welcomeBackend === undefined) throw new Error('desktop welcome: backend unavailable')
+          return welcomeBackend.account.start(desktopClientMetadata(locale.id))
+        },
+        cancelSignIn: async (id) => {
+          if (welcomeBackend === undefined) throw new Error('desktop welcome: backend unavailable')
+          return welcomeBackend.account.cancel(id)
+        },
+        copySignInLink: async (id) => {
+          const state = await welcomeBackend?.account.state()
+          if (state?.attempt?.id !== id || state.attempt.phase !== 'waiting-browser' || state.attempt.authorizeUrl === undefined) {
+            throw new Error('desktop welcome: login link is unavailable')
+          }
+          await clipboard.writeText(platformLoginUrl(state.attempt.authorizeUrl))
+        },
+        saveApiKey: async (apiKey) => {
+          if (backend.host === undefined || welcomeBackend === undefined) return { ok: false }
+          const saved = await welcomeBackend.save(apiKey)
+          if (!saved.ok) return saved
+          await enterWorkspace()
+          return { ok: true }
+        },
+        skip: enterWorkspace,
+      })
+      const window = welcomeWindow
+      window.once('closed', () => {
+        void welcomeBackend?.account.state().then((state) => {
+          if (state.attempt !== null && !enteredWorkspace) return welcomeBackend?.account.cancel(state.attempt.id)
+          return undefined
+        }).catch(() => undefined)
+      })
+      window.once('closed', () => {
+        if (welcomeWindow === window) welcomeWindow = undefined
+        if (enteredWorkspace || recovery.active) return
+        // Nothing runs before the workspace opens. macOS keeps the Dock convention and drops the
+        // unused main window so the next activation rebuilds the welcome; elsewhere the close quits.
+        if (process.platform === 'darwin') mainWindow?.destroy()
+        else app.quit()
+      })
+      if (isQuitting() || recovery.active || enteredWorkspace) window.close()
+      else mainWindow?.hide()
+    })().finally(() => { openingWelcome = undefined })
+    return openingWelcome
   }
   const openInitialWindow = async (): Promise<void> => {
     if (quitting || recovery.active) return
@@ -1394,19 +1477,25 @@ async function main(): Promise<void> {
     writeDesktopLocaleCache(app.getPath('userData'), locale.id)
     windowsLanguage = locale.id
     refreshApplicationMenu()
-    // The community shell never gates startup on the native welcome page: without credentials the
-    // workspace opens anyway and login is the in-app account entry (settings sign-in / API key).
-    await enterWorkspace()
+    if (!enteredWorkspace && needsWelcome({ loggedIn: state.loggedIn, hasApiKey: state.hasApiKey })) {
+      // A later login must retain its own activation policy instead of replaying startup focus.
+      raiseAfterUpdate = false
+      await showWelcome()
+    } else {
+      await enterWorkspace()
+    }
   }
   focusPrimaryWindow = () => {
     if (quitting) return
     if (isMandatory()) { mandatoryUI?.focus(); return }
-    const window = mainWindow
+    const window = welcomeWindow ?? mainWindow
     if (window === undefined || window.isDestroyed()) {
       try { createMainWindow() } catch (error) { reportFatal(error, 'main'); return }
       void (backend.state.phase === 'ready' ? openInitialWindow() : navigateMain(applicationUrl)).catch((error: unknown) => { reportFatal(error, 'main') })
       return
     }
+    // Startup and sign-out select the visible window before activation may reveal the workspace.
+    if (window === mainWindow && !enteredWorkspace) return
     if (window.isMinimized()) window.restore()
     window.show()
     window.focus()
@@ -1433,6 +1522,7 @@ async function main(): Promise<void> {
     backgroundNotice?.dispose()
     tray?.dispose()
     stopAccount?.()
+    if (welcomeWindow !== undefined && !welcomeWindow.isDestroyed()) welcomeWindow.hide()
     if (mainWindow !== undefined && !mainWindow.isDestroyed()) mainWindow.hide()
     updateSchedule.dispose()
     updateDialog.dispose()
@@ -1466,8 +1556,8 @@ async function main(): Promise<void> {
     void quitConfirmation.confirm().then((approved) => {
       if (quitting || shellInstallerOwnsQuit) return
       if (approved) { finishQuit(); return }
-      // A cancelled quit restores the last visible surface; the workspace is the only surface now.
-      if (!enteredWorkspace && !recovery.active) void enterWorkspace().catch((error: unknown) => { reportFatal(error, 'main') })
+      // A quit that started from closing the welcome window destroyed it; a cancelled quit needs it back.
+      if (!enteredWorkspace && !recovery.active) void showWelcome().catch((error: unknown) => { reportFatal(error, 'main') })
     }).catch((error: unknown) => { console.error(error); if (!quitting && !shellInstallerOwnsQuit) finishQuit() })
   })
 

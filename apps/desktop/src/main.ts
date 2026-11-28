@@ -584,8 +584,8 @@ async function main(): Promise<void> {
                   refreshApplicationMenu()
                 }
                 await showWelcome()
-                if (welcomeWindow !== undefined && !welcomeWindow.isDestroyed()) welcomeWindow.webContents.send(WELCOME_IPC.state, state)
               }
+              if (welcomeWindow !== undefined && !welcomeWindow.isDestroyed()) welcomeWindow.webContents.send(WELCOME_IPC.state, state)
               return undefined
             }).catch(() => undefined)
           }
